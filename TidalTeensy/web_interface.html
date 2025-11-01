@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TidalTeensy Terminal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier New', 'Consolas', monospace;
+            background: #0a0e27;
+            color: #00ff00;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Connection Modal */
+        #connectionModal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        #connectionModal.hidden {
+            display: none;
+        }
+        
+        .modal-content {
+            background: #16213e;
+            border: 2px solid #00ff88;
+            border-radius: 10px;
+            padding: 30px;
+            max-width: 500px;
+            text-align: center;
+        }
+        
+        .modal-content h2 {
+            color: #00ff88;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+        
+        .modal-content p {
+            color: #aaa;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        button {
+            background: #00ff88;
+            color: #0a0e27;
+            border: none;
+            padding: 12px 30px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: #00ffff;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 136, 0.4);
+        }
+        
+        button:disabled {
+            background: #444;
+            color: #888;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* Terminal Header */
+        .terminal-header {
+            background: #16213e;
+            border-bottom: 2px solid #00ff88;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .terminal-title {
+            color: #00ff88;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        
+        .terminal-status {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #888;
+            font-size: 0.9em;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ff4444;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-dot.connected {
+            background: #00ff88;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        
+        /* Terminal Body */
+        .terminal-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .terminal-output {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            font-size: 14px;
+            line-height: 1.6;
+            background: #0a0e27;
+        }
+        
+        .terminal-output::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        .terminal-output::-webkit-scrollbar-track {
+            background: #0a0e27;
+        }
+        
+        .terminal-output::-webkit-scrollbar-thumb {
+            background: #00ff88;
+            border-radius: 5px;
+        }
+        
+        .terminal-line {
+            margin-bottom: 4px;
+            word-wrap: break-word;
+        }
+        
+        .terminal-line.prompt {
+            color: #00ff88;
+        }
+        
+        .terminal-line.error {
+            color: #ff4444;
+        }
+        
+        .terminal-line.success {
+            color: #00ffff;
+        }
+        
+        .terminal-line.info {
+            color: #ffaa00;
+        }
+        
+        .terminal-line.teensy {
+            color: #00ff00;
+        }
+        
+        /* Input Area */
+        .terminal-input-area {
+            background: #16213e;
+            border-top: 2px solid #00ff88;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .input-prompt {
+            color: #00ff88;
+            font-weight: bold;
+        }
+        
+        #terminalInput {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            outline: none;
+        }
+        
+        #terminalInput::placeholder {
+            color: #555;
+        }
+        
+        /* Quick Commands */
+        .quick-commands {
+            background: #16213e;
+            padding: 10px 20px;
+            border-top: 1px solid #00ff88;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .quick-commands-label {
+            color: #888;
+            font-size: 12px;
+        }
+        
+        .quick-btn {
+            background: #0a0e27;
+            color: #00ff88;
+            border: 1px solid #00ff88;
+            padding: 5px 12px;
+            font-size: 11px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .quick-btn:hover {
+            background: #00ff88;
+            color: #0a0e27;
+        }
+    </style>
+</head>
+<body>
+    <!-- Connection Modal -->
+    <div id="connectionModal">
+        <div class="modal-content">
+            <h2>🎵 TidalTeensy Terminal</h2>
+            <p>Interface de live coding pour Teensy 4.0</p>
+            <p style="font-size: 0.9em; color: #ff8800;">
+                ⚠️ Nécessite Chrome, Edge ou Opera<br>
+                (Web Serial API)
+            </p>
+            <div class="modal-buttons">
+                <button onclick="connectSerial()">🔌 Se connecter au Teensy</button>
+            </div>
+            <p style="margin-top: 20px; font-size: 0.85em; color: #666;">
+                Le navigateur va vous demander de sélectionner le port série USB
+            </p>
+        </div>
+    </div>
+
+    <!-- Terminal Header -->
+    <div class="terminal-header">
+        <div class="terminal-title">TidalTeensy Terminal</div>
+        <div class="terminal-status">
+            <div class="status-indicator">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">Déconnecté</span>
+            </div>
+            <button class="btn-small" onclick="toggleConnection()">Déconnecter</button>
+            <button class="btn-small" onclick="clearTerminal()">Clear</button>
+        </div>
+    </div>
+
+    <!-- Terminal Body -->
+    <div class="terminal-body">
+        <div class="terminal-output" id="terminalOutput">
+            <div class="terminal-line info">TidalTeensy Terminal v0.1</div>
+            <div class="terminal-line">En attente de connexion...</div>
+        </div>
+        
+        <!-- Quick Commands Bar -->
+        <div class="quick-commands">
+            <span class="quick-commands-label">Quick:</span>
+            <button class="quick-btn" onclick="quickCommand('d1 bd sd hh cp')">d1 bd sd hh cp</button>
+            <button class="quick-btn" onclick="quickCommand('d2 bd*4')">d2 bd*4</button>
+            <button class="quick-btn" onclick="quickCommand('d3 hh*8')">d3 hh*8</button>
+            <button class="quick-btn" onclick="quickCommand('bpm 140')">bpm 140</button>
+            <button class="quick-btn" onclick="quickCommand('clear')">clear</button>
+            <button class="quick-btn" onclick="quickCommand('help')">help</button>
+        </div>
+        
+        <!-- Input Area -->
+        <div class="terminal-input-area">
+            <span class="input-prompt">tidal&gt;</span>
+            <input type="text" id="terminalInput" placeholder="Entrez votre commande..." autocomplete="off">
+        </div>
+    </div>
+
+    <script>
+        let port = null;
+        let reader = null;
+        let writer = null;
+        let isConnected = false;
+        let commandHistory = [];
+        let historyIndex = -1;
+
+        // Auto-scroll terminal
+        function scrollToBottom() {
+            const output = document.getElementById('terminalOutput');
+            output.scrollTop = output.scrollHeight;
+        }
+
+        // Add line to terminal
+        function addTerminalLine(text, type = '') {
+            const output = document.getElementById('terminalOutput');
+            const line = document.createElement('div');
+            line.className = 'terminal-line ' + type;
+            line.textContent = text;
+            output.appendChild(line);
+            scrollToBottom();
+        }
+
+        // Clear terminal
+        function clearTerminal() {
+            const output = document.getElementById('terminalOutput');
+            output.innerHTML = '<div class="terminal-line info">Terminal cleared</div>';
+        }
+
+        // Update connection status
+        function updateStatus(connected) {
+            isConnected = connected;
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            
+            if (connected) {
+                statusDot.classList.add('connected');
+                statusText.textContent = 'Connecté';
+                document.getElementById('connectionModal').classList.add('hidden');
+                document.getElementById('terminalInput').focus();
+            } else {
+                statusDot.classList.remove('connected');
+                statusText.textContent = 'Déconnecté';
+            }
+        }
+
+        // Connect to serial port
+        async function connectSerial() {
+            if (!('serial' in navigator)) {
+                addTerminalLine('✗ Web Serial API non supportée', 'error');
+                addTerminalLine('Utilisez Chrome, Edge ou Opera', 'error');
+                return;
+            }
+
+            try {
+                addTerminalLine('Sélection du port série...', 'info');
+                
+                // Request port with filters for common USB serial devices
+                port = await navigator.serial.requestPort({
+                    filters: [
+                        { usbVendorId: 0x16C0 }, // Teensy vendor ID
+                        { usbVendorId: 0x2341 }, // Arduino vendor ID
+                    ]
+                });
+                
+                addTerminalLine('Ouverture du port...', 'info');
+                
+                // Open with proper settings
+                await port.open({ 
+                    baudRate: 115200,
+                    dataBits: 8,
+                    stopBits: 1,
+                    parity: 'none',
+                    flowControl: 'none'
+                });
+
+                addTerminalLine('✓ Connecté au Teensy!', 'success');
+                
+                // Setup reader
+                const textDecoder = new TextDecoderStream();
+                const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
+                reader = textDecoder.readable.getReader();
+
+                // Setup writer
+                const textEncoder = new TextEncoderStream();
+                const writableStreamClosed = textEncoder.readable.pipeTo(port.writable);
+                writer = textEncoder.writable.getWriter();
+
+                updateStatus(true);
+
+                // Start reading
+                readLoop();
+
+            } catch (error) {
+                addTerminalLine('✗ Erreur de connexion: ' + error.message, 'error');
+                
+                if (error.name === 'NotFoundError') {
+                    addTerminalLine('Aucun port sélectionné', 'error');
+                } else if (error.name === 'InvalidStateError') {
+                    addTerminalLine('Le port est déjà ouvert ou occupé', 'error');
+                    addTerminalLine('Essayez de fermer les autres applications utilisant le port série', 'info');
+                } else {
+                    addTerminalLine('Détails: ' + error.name, 'error');
+                }
+                
+                console.error('Connection error:', error);
+            }
+        }
+
+        // Read loop
+        async function readLoop() {
+            try {
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) {
+                        addTerminalLine('✗ Connexion fermée', 'error');
+                        updateStatus(false);
+                        break;
+                    }
+                    if (value) {
+                        // Split by lines and display
+                        const lines = value.split('\n');
+                        lines.forEach(line => {
+                            const trimmed = line.trim();
+                            if (trimmed) {
+                                addTerminalLine(trimmed, 'teensy');
+                            }
+                        });
+                    }
+                }
+            } catch (error) {
+                addTerminalLine('✗ Erreur de lecture: ' + error.message, 'error');
+                console.error('Read error:', error);
+                updateStatus(false);
+            }
+        }
+
+        // Disconnect
+        async function toggleConnection() {
+            if (!isConnected) {
+                connectSerial();
+                return;
+            }
+
+            try {
+                if (reader) {
+                    await reader.cancel();
+                    reader = null;
+                }
+                if (writer) {
+                    await writer.close();
+                    writer = null;
+                }
+                if (port) {
+                    await port.close();
+                    port = null;
+                }
+                
+                addTerminalLine('✓ Déconnecté', 'info');
+                updateStatus(false);
+            } catch (error) {
+                addTerminalLine('✗ Erreur lors de la déconnexion: ' + error.message, 'error');
+                console.error('Disconnect error:', error);
+            }
+        }
+
+        // Send command
+        async function sendCommand(command) {
+            if (!isConnected || !writer) {
+                addTerminalLine('✗ Non connecté', 'error');
+                return;
+            }
+
+            try {
+                addTerminalLine('tidal> ' + command, 'prompt');
+                await writer.write(command + '\n');
+                
+                // Add to history
+                if (command && command !== commandHistory[commandHistory.length - 1]) {
+                    commandHistory.push(command);
+                    if (commandHistory.length > 50) {
+                        commandHistory.shift();
+                    }
+                }
+                historyIndex = commandHistory.length;
+                
+            } catch (error) {
+                addTerminalLine('✗ Erreur d\'envoi: ' + error.message, 'error');
+                console.error('Send error:', error);
+            }
+        }
+
+        // Quick command
+        function quickCommand(cmd) {
+            document.getElementById('terminalInput').value = cmd;
+            document.getElementById('terminalInput').focus();
+        }
+
+        // Input handling
+        document.getElementById('terminalInput').addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                const input = this.value.trim();
+                if (input) {
+                    sendCommand(input);
+                    this.value = '';
+                }
+                event.preventDefault();
+            } else if (event.key === 'ArrowUp') {
+                // History up
+                if (historyIndex > 0) {
+                    historyIndex--;
+                    this.value = commandHistory[historyIndex] || '';
+                }
+                event.preventDefault();
+            } else if (event.key === 'ArrowDown') {
+                // History down
+                if (historyIndex < commandHistory.length - 1) {
+                    historyIndex++;
+                    this.value = commandHistory[historyIndex] || '';
+                } else {
+                    historyIndex = commandHistory.length;
+                    this.value = '';
+                }
+                event.preventDefault();
+            } else if (event.key === 'Tab') {
+                // Auto-complete (basic)
+                const commands = ['bd', 'sd', 'hh', 'cp', 'sn', 'kick', 'snare', 'hat', 'clap', 'bpm', 'clear', 'hush', 'help', 'silence'];
+                const input = this.value;
+                const lastWord = input.split(' ').pop();
+                
+                if (lastWord) {
+                    const matches = commands.filter(cmd => cmd.startsWith(lastWord));
+                    if (matches.length === 1) {
+                        const words = input.split(' ');
+                        words[words.length - 1] = matches[0];
+                        this.value = words.join(' ') + ' ';
+                    }
+                }
+                event.preventDefault();
+            }
+        });
+
+        // Check for Web Serial API support
+        window.addEventListener('load', function() {
+            if (!('serial' in navigator)) {
+                addTerminalLine('✗ Web Serial API non supportée dans ce navigateur', 'error');
+                addTerminalLine('Veuillez utiliser Chrome, Edge ou Opera', 'error');
+                addTerminalLine('Chrome: chrome://flags/#enable-experimental-web-platform-features', 'info');
+            } else {
+                addTerminalLine('✓ Web Serial API disponible', 'success');
+                addTerminalLine('Cliquez sur le bouton de connexion pour commencer', 'info');
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            // Ctrl+L : Clear terminal
+            if (event.ctrlKey && event.key === 'l') {
+                clearTerminal();
+                event.preventDefault();
+            }
+            // Ctrl+D : Disconnect
+            if (event.ctrlKey && event.key === 'd') {
+                if (isConnected) {
+                    toggleConnection();
+                }
+                event.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>
