@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TidalTeensy Terminal</title>
+    <title>TidalTeensy Code Editor</title>
     <style>
         * {
             margin: 0;
@@ -145,129 +145,297 @@
             font-size: 12px;
         }
         
-        /* Terminal Body */
-        .terminal-body {
+        /* Main Content */
+        .main-content {
             flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 0;
+            overflow: hidden;
+            min-height: 0; /* Important for flex children */
+        }
+        
+        /* Code Editor Panel */
+        .editor-panel {
             display: flex;
             flex-direction: column;
+            border-right: 2px solid #00ff88;
+            background: #0a0e27;
+            min-height: 0; /* Important for flex scrolling */
             overflow: hidden;
         }
         
-        .terminal-output {
+        .editor-header {
+            background: #16213e;
+            border-bottom: 1px solid #00ff88;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .editor-title {
+            color: #00ff88;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .editor-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-editor {
+            background: #00ff88;
+            color: #0a0e27;
+            border: none;
+            padding: 5px 12px;
+            font-size: 11px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        
+        .btn-editor:hover {
+            background: #00ffff;
+            transform: translateY(-1px);
+        }
+        
+        .btn-editor.danger {
+            background: #ff4444;
+            color: white;
+        }
+        
+        .btn-editor.danger:hover {
+            background: #ff6666;
+        }
+        
+        /* Code Editor Area */
+        .code-editor-wrapper {
             flex: 1;
-            padding: 20px;
-            overflow-y: auto;
+            display: flex;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .line-numbers {
+            background: #16213e;
+            color: #666;
+            padding: 15px 10px;
+            text-align: right;
+            user-select: none;
             font-size: 14px;
             line-height: 1.6;
-            background: #0a0e27;
+            border-right: 1px solid #00ff88;
+            min-width: 50px;
+            overflow: hidden;
         }
         
-        .terminal-output::-webkit-scrollbar {
-            width: 10px;
+        .line-numbers div {
+            padding: 0 5px;
         }
         
-        .terminal-output::-webkit-scrollbar-track {
-            background: #0a0e27;
-        }
-        
-        .terminal-output::-webkit-scrollbar-thumb {
-            background: #00ff88;
-            border-radius: 5px;
-        }
-        
-        .terminal-line {
-            margin-bottom: 4px;
-            word-wrap: break-word;
-        }
-        
-        .terminal-line.prompt {
-            color: #00ff88;
-        }
-        
-        .terminal-line.error {
-            color: #ff4444;
-        }
-        
-        .terminal-line.success {
-            color: #00ffff;
-        }
-        
-        .terminal-line.info {
-            color: #ffaa00;
-        }
-        
-        .terminal-line.teensy {
-            color: #00ff00;
-        }
-        
-        /* Input Area */
-        .terminal-input-area {
-            background: #16213e;
-            border-top: 2px solid #00ff88;
-            padding: 15px 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .input-prompt {
+        .line-numbers div.active {
+            background: #00ff8820;
             color: #00ff88;
             font-weight: bold;
         }
         
-        #terminalInput {
-            flex: 1;
-            background: transparent;
-            border: none;
-            color: #00ff00;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            outline: none;
+        .line-numbers div.modified {
+            color: #ffaa00;
         }
         
-        #terminalInput::placeholder {
-            color: #555;
+        .line-numbers div.error {
+            color: #ff4444;
+        }
+        
+        #codeEditor {
+            flex: 1;
+            background: #0a0e27;
+            color: #00ff00;
+            border: none;
+            padding: 15px;
+            font-family: 'Courier New', 'Consolas', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+            overflow-y: auto;
+            white-space: pre;
+            overflow-wrap: normal;
+        }
+        
+        #codeEditor::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        #codeEditor::-webkit-scrollbar-track {
+            background: #0a0e27;
+        }
+        
+        #codeEditor::-webkit-scrollbar-thumb {
+            background: #00ff88;
+            border-radius: 5px;
+        }
+        
+        /* Console Panel */
+        .console-panel {
+            display: flex;
+            flex-direction: column;
+            background: #0a0e27;
+            position: relative; /* Pour le positionnement du bouton scroll */
+            min-height: 0; /* Important for flex scrolling */
+            overflow: hidden; /* Contient les enfants */
+        }
+        
+        .console-header {
+            background: #16213e;
+            border-bottom: 1px solid #00ff88;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .console-title {
+            color: #00ff88;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .console-output {
+            flex: 1;
+            padding: 15px;
+            overflow-y: scroll; /* Force scroll bar */
+            overflow-x: hidden;
+            font-size: 13px;
+            line-height: 1.5;
+            min-height: 0; /* Important for flex scrolling */
+        }
+        
+        .console-output::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .console-output::-webkit-scrollbar-track {
+            background: #0a0e27;
+        }
+        
+        .console-output::-webkit-scrollbar-thumb {
+            background: #00ff88;
+            border-radius: 5px;
+        }
+        
+        .console-line {
+            margin-bottom: 3px;
+            word-wrap: break-word;
+        }
+        
+        .console-line.prompt {
+            color: #00ff88;
+        }
+        
+        .console-line.error {
+            color: #ff4444;
+        }
+        
+        .console-line.success {
+            color: #00ffff;
+        }
+        
+        .console-line.info {
+            color: #ffaa00;
+        }
+        
+        .console-line.teensy {
+            color: #00ff00;
+        }
+        
+        .console-line.parsed {
+            color: #888;
+            font-style: italic;
+        }
+        
+        /* Scroll to bottom button */
+        #scrollToBottomBtn {
+            position: absolute;
+            bottom: 70px;
+            right: 20px;
+            background: #00ff88;
+            color: #0a0e27;
+            border: none;
+            padding: 8px 16px;
+            font-size: 12px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 255, 136, 0.4);
+            transition: all 0.3s;
+            font-family: 'Courier New', monospace;
+            display: none; /* Caché par défaut */
+            z-index: 100;
+        }
+        
+        #scrollToBottomBtn:hover {
+            background: #00ffff;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 255, 136, 0.6);
+        }
+        
+        #scrollToBottomBtn.visible {
+            display: block;
         }
         
         /* Quick Commands */
         .quick-commands {
             background: #16213e;
-            padding: 10px 20px;
+            padding: 10px 15px;
             border-top: 1px solid #00ff88;
             display: flex;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap;
             align-items: center;
         }
         
         .quick-commands-label {
             color: #888;
-            font-size: 12px;
+            font-size: 11px;
         }
         
         .quick-btn {
             background: #0a0e27;
             color: #00ff88;
             border: 1px solid #00ff88;
-            padding: 5px 12px;
-            font-size: 11px;
+            padding: 4px 10px;
+            font-size: 10px;
             border-radius: 3px;
             cursor: pointer;
             transition: all 0.2s;
+            font-family: 'Courier New', monospace;
         }
         
         .quick-btn:hover {
             background: #00ff88;
             color: #0a0e27;
         }
+        
+        /* Syntax Highlighting (simple) */
+        .syntax-channel { color: #00ffff; }
+        .syntax-sample { color: #ffaa00; }
+        .syntax-note { color: #ff88ff; }
+        .syntax-command { color: #00ff88; }
+        .syntax-number { color: #ff8800; }
+        .syntax-operator { color: #888; }
     </style>
 </head>
 <body>
     <!-- Connection Modal -->
     <div id="connectionModal">
         <div class="modal-content">
-            <h2>🎵 TidalTeensy Terminal</h2>
-            <p>Interface de live coding pour Teensy 4.0</p>
+            <h2>� TidalTeensy Code Editor</h2>
+            <p>Interface de live coding multi-lignes pour Teensy 4.0</p>
             <p style="font-size: 0.9em; color: #ff8800;">
                 ⚠️ Nécessite Chrome, Edge ou Opera<br>
                 (Web Serial API)
@@ -283,46 +451,74 @@
 
     <!-- Terminal Header -->
     <div class="terminal-header">
-        <div class="terminal-title">TidalTeensy Terminal</div>
+        <div class="terminal-title">🎹 TidalTeensy Code Editor</div>
         <div class="terminal-status">
             <div class="status-indicator">
                 <div class="status-dot" id="statusDot"></div>
                 <span id="statusText">Déconnecté</span>
             </div>
             <button class="btn-small" onclick="toggleConnection()">Déconnecter</button>
-            <button class="btn-small" onclick="clearTerminal()">Clear</button>
         </div>
     </div>
 
-    <!-- Terminal Body -->
-    <div class="terminal-body">
-        <div class="terminal-output" id="terminalOutput">
-            <div class="terminal-line info">TidalTeensy Terminal v0.1</div>
-            <div class="terminal-line">En attente de connexion...</div>
+    <!-- Main Content: Editor + Console -->
+    <div class="main-content">
+        <!-- Code Editor Panel -->
+        <div class="editor-panel">
+            <div class="editor-header">
+                <div class="editor-title">📝 Code Editor</div>
+                <div class="editor-actions">
+                    <button class="btn-editor" onclick="evaluateCode()" title="Ctrl+Enter">▶ Evaluate All</button>
+                    <button class="btn-editor" onclick="evaluateSelection()" title="Shift+Enter">▶ Eval Line</button>
+                    <button class="btn-editor danger" onclick="clearAllPatterns()" title="Ctrl+.">■ Stop All</button>
+                </div>
+            </div>
+            
+            <div class="code-editor-wrapper">
+                <div class="line-numbers" id="lineNumbers"></div>
+                <textarea id="codeEditor" spellcheck="false" placeholder="-- Écrivez votre code TidalTeensy ici
+-- Exemples:
+d1 bd sd hh cp
+d2 bd*4
+d3 hh*8
+d4 sine:c4 sine:e4 sine:g4
+
+-- Commandes:
+bpm 140
+clear
+
+-- Ctrl+Enter: Évaluer tout
+-- Shift+Enter: Évaluer la ligne courante
+-- Ctrl+.: Stop tous les patterns"></textarea>
+            </div>
         </div>
         
-        <!-- Quick Commands Bar -->
-        <div class="quick-commands">
-            <span class="quick-commands-label">Drums:</span>
-            <button class="quick-btn" onclick="quickCommand('d1 bd sd hh cp')">d1 bd sd hh cp</button>
-            <button class="quick-btn" onclick="quickCommand('d2 bd*4')">d2 bd*4</button>
-            <button class="quick-btn" onclick="quickCommand('d3 hh*8')">d3 hh*8</button>
+        <!-- Console Panel -->
+        <div class="console-panel">
+            <div class="console-header">
+                <div class="console-title">📟 Console</div>
+                <div class="editor-actions">
+                    <button class="btn-editor" onclick="clearConsole()">Clear</button>
+                </div>
+            </div>
             
-            <span class="quick-commands-label">│ Notes:</span>
-            <button class="quick-btn" onclick="quickCommand('d4 sine:c4 sine:e4 sine:g4')">Sine Chord</button>
-            <button class="quick-btn" onclick="quickCommand('d4 bass:c2*4')">Bass Line</button>
-            <button class="quick-btn" onclick="quickCommand('d4 lead:c4 lead:e4 lead:g4 lead:c5')">Lead Melody</button>
+            <div class="console-output" id="consoleOutput">
+                <div class="console-line info">TidalTeensy Code Editor v1.0</div>
+                <div class="console-line">En attente de connexion...</div>
+            </div>
             
-            <span class="quick-commands-label">│ Control:</span>
-            <button class="quick-btn" onclick="quickCommand('bpm 140')">bpm 140</button>
-            <button class="quick-btn" onclick="quickCommand('clear')">clear</button>
-            <button class="quick-btn" onclick="quickCommand('help')">help</button>
-        </div>
-        
-        <!-- Input Area -->
-        <div class="terminal-input-area">
-            <span class="input-prompt">tidal&gt;</span>
-            <input type="text" id="terminalInput" placeholder="Entrez votre commande..." autocomplete="off">
+            <!-- Scroll to bottom button (appears when scrolled up) -->
+            <button id="scrollToBottomBtn" onclick="scrollToBottom()">↓ Nouveaux messages</button>
+            
+            <!-- Quick Commands Bar -->
+            <div class="quick-commands">
+                <span class="quick-commands-label">Quick:</span>
+                <button class="quick-btn" onclick="insertCode('d1 bd sd hh cp')">d1 drums</button>
+                <button class="quick-btn" onclick="insertCode('d2 bass:c2*4')">d2 bass</button>
+                <button class="quick-btn" onclick="insertCode('d3 sine:c4 sine:e4 sine:g4')">d3 chord</button>
+                <button class="quick-btn" onclick="insertCode('bpm 140')">bpm 140</button>
+                <button class="quick-btn" onclick="sendCommand('clear')">clear all</button>
+            </div>
         </div>
     </div>
 
@@ -331,29 +527,66 @@
         let reader = null;
         let writer = null;
         let isConnected = false;
-        let commandHistory = [];
-        let historyIndex = -1;
+        let linesState = {}; // Track state of each line { lineNumber: { content: '', sent: false, error: false } }
+        let currentLineCount = 0;
+        let autoScrollEnabled = true; // Auto-scroll activé par défaut
 
-        // Auto-scroll terminal
-        function scrollToBottom() {
-            const output = document.getElementById('terminalOutput');
-            output.scrollTop = output.scrollHeight;
+        // Check if user is scrolled to bottom
+        function isScrolledToBottom() {
+            const output = document.getElementById('consoleOutput');
+            const threshold = 50; // 50px de marge
+            return output.scrollHeight - output.scrollTop - output.clientHeight < threshold;
         }
 
-        // Add line to terminal
-        function addTerminalLine(text, type = '') {
-            const output = document.getElementById('terminalOutput');
+        // Auto-scroll console (seulement si déjà en bas)
+        function scrollConsole() {
+            if (autoScrollEnabled) {
+                const output = document.getElementById('consoleOutput');
+                output.scrollTop = output.scrollHeight;
+            }
+        }
+
+        // Scroll to bottom (manual action)
+        function scrollToBottom() {
+            const output = document.getElementById('consoleOutput');
+            output.scrollTop = output.scrollHeight;
+            autoScrollEnabled = true;
+            updateScrollButton();
+        }
+
+        // Update scroll button visibility
+        function updateScrollButton() {
+            const btn = document.getElementById('scrollToBottomBtn');
+            if (!autoScrollEnabled && !isScrolledToBottom()) {
+                btn.classList.add('visible');
+            } else {
+                btn.classList.remove('visible');
+            }
+        }
+
+        // Add line to console
+        function addConsoleLine(text, type = '') {
+            const output = document.getElementById('consoleOutput');
             const line = document.createElement('div');
-            line.className = 'terminal-line ' + type;
+            line.className = 'console-line ' + type;
             line.textContent = text;
             output.appendChild(line);
-            scrollToBottom();
+            
+            // Auto-scroll seulement si l'utilisateur était déjà en bas
+            if (isScrolledToBottom()) {
+                scrollConsole();
+            }
+            
+            // Update scroll button visibility
+            updateScrollButton();
         }
 
-        // Clear terminal
-        function clearTerminal() {
-            const output = document.getElementById('terminalOutput');
-            output.innerHTML = '<div class="terminal-line info">Terminal cleared</div>';
+        // Clear console
+        function clearConsole() {
+            const output = document.getElementById('consoleOutput');
+            output.innerHTML = '<div class="console-line info">Console cleared</div>';
+            scrollConsole();
+            updateScrollButton();
         }
 
         // Update connection status
@@ -366,35 +599,248 @@
                 statusDot.classList.add('connected');
                 statusText.textContent = 'Connecté';
                 document.getElementById('connectionModal').classList.add('hidden');
-                document.getElementById('terminalInput').focus();
+                document.getElementById('codeEditor').focus();
             } else {
                 statusDot.classList.remove('connected');
                 statusText.textContent = 'Déconnecté';
             }
         }
 
+        // Update line numbers display
+        function updateLineNumbers() {
+            const editor = document.getElementById('codeEditor');
+            const lineNumbers = document.getElementById('lineNumbers');
+            const lines = editor.value.split('\n');
+            const lineCount = lines.length;
+            
+            // Get cursor position to highlight current line
+            const cursorPos = editor.selectionStart;
+            const textBeforeCursor = editor.value.substring(0, cursorPos);
+            const currentLine = textBeforeCursor.split('\n').length;
+            
+            let html = '';
+            for (let i = 1; i <= lineCount; i++) {
+                let className = '';
+                if (i === currentLine) className = 'active';
+                else if (linesState[i] && linesState[i].modified) className = 'modified';
+                else if (linesState[i] && linesState[i].error) className = 'error';
+                
+                html += `<div class="${className}">${i}</div>`;
+            }
+            lineNumbers.innerHTML = html;
+            currentLineCount = lineCount;
+            
+            // Sync scroll
+            lineNumbers.scrollTop = editor.scrollTop;
+        }
+
+        // Parse a single line for errors (basic validation)
+        function parseLine(line) {
+            line = line.trim();
+            
+            // Empty lines and comments are OK
+            if (line === '' || line.startsWith('--')) {
+                return { valid: true, type: 'comment' };
+            }
+            
+            // Check for channel patterns (d1-d8)
+            if (/^d[1-8]\s+/.test(line)) {
+                return { valid: true, type: 'pattern' };
+            }
+            
+            // Check for commands
+            if (/^(bpm|clear|hush|silence|help)\b/.test(line)) {
+                return { valid: true, type: 'command' };
+            }
+            
+            return { valid: false, type: 'unknown', error: 'Syntax non reconnue' };
+        }
+
+        // Real-time parsing on editor change
+        function onEditorChange() {
+            updateLineNumbers();
+            
+            const editor = document.getElementById('codeEditor');
+            const lines = editor.value.split('\n');
+            
+            // Parse each line and update state
+            lines.forEach((line, index) => {
+                const lineNum = index + 1;
+                const parsed = parseLine(line);
+                
+                if (!linesState[lineNum]) {
+                    linesState[lineNum] = {};
+                }
+                
+                // Check if line was modified
+                if (linesState[lineNum].content !== line) {
+                    linesState[lineNum].modified = true;
+                    linesState[lineNum].sent = false;
+                }
+                
+                linesState[lineNum].content = line;
+                linesState[lineNum].error = !parsed.valid;
+                linesState[lineNum].type = parsed.type;
+            });
+        }
+
+        // Send command to Teensy
+        async function sendCommand(command) {
+            if (!isConnected || !writer) {
+                addConsoleLine('✗ Non connecté', 'error');
+                return false;
+            }
+
+            try {
+                await writer.write(command + '\n');
+                return true;
+            } catch (error) {
+                addConsoleLine('✗ Erreur d\'envoi: ' + error.message, 'error');
+                console.error('Send error:', error);
+                return false;
+            }
+        }
+
+        // Evaluate all code
+        async function evaluateCode() {
+            if (!isConnected) {
+                addConsoleLine('✗ Non connecté au Teensy', 'error');
+                return;
+            }
+            
+            const editor = document.getElementById('codeEditor');
+            const lines = editor.value.split('\n');
+            
+            addConsoleLine('▶ Évaluation de tout le code...', 'info');
+            
+            let sentCount = 0;
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                const lineNum = i + 1;
+                
+                // Skip empty lines and comments
+                if (line === '' || line.startsWith('--')) {
+                    continue;
+                }
+                
+                // Parse and validate
+                const parsed = parseLine(line);
+                if (!parsed.valid) {
+                    addConsoleLine(`Line ${lineNum}: ${parsed.error}`, 'error');
+                    linesState[lineNum].error = true;
+                    continue;
+                }
+                
+                // Send to Teensy
+                addConsoleLine(`→ ${line}`, 'prompt');
+                const success = await sendCommand(line);
+                
+                if (success) {
+                    linesState[lineNum].sent = true;
+                    linesState[lineNum].modified = false;
+                    linesState[lineNum].error = false;
+                    sentCount++;
+                }
+                
+                // Small delay between commands
+                await new Promise(resolve => setTimeout(resolve, 10));
+            }
+            
+            addConsoleLine(`✓ ${sentCount} commande(s) envoyée(s)`, 'success');
+            updateLineNumbers();
+        }
+
+        // Evaluate current line or selection
+        async function evaluateSelection() {
+            if (!isConnected) {
+                addConsoleLine('✗ Non connecté au Teensy', 'error');
+                return;
+            }
+            
+            const editor = document.getElementById('codeEditor');
+            const cursorPos = editor.selectionStart;
+            const textBeforeCursor = editor.value.substring(0, cursorPos);
+            const currentLineNum = textBeforeCursor.split('\n').length;
+            
+            const lines = editor.value.split('\n');
+            const line = lines[currentLineNum - 1].trim();
+            
+            if (line === '' || line.startsWith('--')) {
+                addConsoleLine('Line vide ou commentaire, ignoré', 'info');
+                return;
+            }
+            
+            // Parse and validate
+            const parsed = parseLine(line);
+            if (!parsed.valid) {
+                addConsoleLine(`Erreur ligne ${currentLineNum}: ${parsed.error}`, 'error');
+                linesState[currentLineNum].error = true;
+                updateLineNumbers();
+                return;
+            }
+            
+            // Send to Teensy
+            addConsoleLine(`→ Line ${currentLineNum}: ${line}`, 'prompt');
+            const success = await sendCommand(line);
+            
+            if (success) {
+                linesState[currentLineNum].sent = true;
+                linesState[currentLineNum].modified = false;
+                linesState[currentLineNum].error = false;
+                updateLineNumbers();
+            }
+        }
+
+        // Clear all patterns (send silence to all channels)
+        async function clearAllPatterns() {
+            if (!isConnected) {
+                addConsoleLine('✗ Non connecté au Teensy', 'error');
+                return;
+            }
+            
+            addConsoleLine('■ Arrêt de tous les patterns...', 'info');
+            await sendCommand('clear');
+            addConsoleLine('✓ Tous les patterns arrêtés', 'success');
+        }
+
+        // Insert code at cursor position
+        function insertCode(code) {
+            const editor = document.getElementById('codeEditor');
+            const cursorPos = editor.selectionStart;
+            const textBefore = editor.value.substring(0, cursorPos);
+            const textAfter = editor.value.substring(cursorPos);
+            
+            // Insert at cursor position
+            editor.value = textBefore + code + '\n' + textAfter;
+            
+            // Move cursor to end of inserted code
+            const newCursorPos = cursorPos + code.length + 1;
+            editor.setSelectionRange(newCursorPos, newCursorPos);
+            editor.focus();
+            
+            onEditorChange();
+        }
+
         // Connect to serial port
         async function connectSerial() {
             if (!('serial' in navigator)) {
-                addTerminalLine('✗ Web Serial API non supportée', 'error');
-                addTerminalLine('Utilisez Chrome, Edge ou Opera', 'error');
+                addConsoleLine('✗ Web Serial API non supportée', 'error');
+                addConsoleLine('Utilisez Chrome, Edge ou Opera', 'error');
                 return;
             }
 
             try {
-                addTerminalLine('Sélection du port série...', 'info');
+                addConsoleLine('Sélection du port série...', 'info');
                 
-                // Request port with filters for common USB serial devices
                 port = await navigator.serial.requestPort({
                     filters: [
-                        { usbVendorId: 0x16C0 }, // Teensy vendor ID
-                        { usbVendorId: 0x2341 }, // Arduino vendor ID
+                        { usbVendorId: 0x16C0 }, // Teensy
+                        { usbVendorId: 0x2341 }, // Arduino
                     ]
                 });
                 
-                addTerminalLine('Ouverture du port...', 'info');
+                addConsoleLine('Ouverture du port...', 'info');
                 
-                // Open with proper settings
                 await port.open({ 
                     baudRate: 115200,
                     dataBits: 8,
@@ -403,7 +849,7 @@
                     flowControl: 'none'
                 });
 
-                addTerminalLine('✓ Connecté au Teensy!', 'success');
+                addConsoleLine('✓ Connecté au Teensy!', 'success');
                 
                 // Setup reader
                 const textDecoder = new TextDecoderStream();
@@ -416,20 +862,15 @@
                 writer = textEncoder.writable.getWriter();
 
                 updateStatus(true);
-
-                // Start reading
                 readLoop();
 
             } catch (error) {
-                addTerminalLine('✗ Erreur de connexion: ' + error.message, 'error');
+                addConsoleLine('✗ Erreur de connexion: ' + error.message, 'error');
                 
                 if (error.name === 'NotFoundError') {
-                    addTerminalLine('Aucun port sélectionné', 'error');
+                    addConsoleLine('Aucun port sélectionné', 'error');
                 } else if (error.name === 'InvalidStateError') {
-                    addTerminalLine('Le port est déjà ouvert ou occupé', 'error');
-                    addTerminalLine('Essayez de fermer les autres applications utilisant le port série', 'info');
-                } else {
-                    addTerminalLine('Détails: ' + error.name, 'error');
+                    addConsoleLine('Le port est déjà ouvert', 'error');
                 }
                 
                 console.error('Connection error:', error);
@@ -442,23 +883,22 @@
                 while (true) {
                     const { value, done } = await reader.read();
                     if (done) {
-                        addTerminalLine('✗ Connexion fermée', 'error');
+                        addConsoleLine('✗ Connexion fermée', 'error');
                         updateStatus(false);
                         break;
                     }
                     if (value) {
-                        // Split by lines and display
                         const lines = value.split('\n');
                         lines.forEach(line => {
                             const trimmed = line.trim();
                             if (trimmed) {
-                                addTerminalLine(trimmed, 'teensy');
+                                addConsoleLine(trimmed, 'teensy');
                             }
                         });
                     }
                 }
             } catch (error) {
-                addTerminalLine('✗ Erreur de lecture: ' + error.message, 'error');
+                addConsoleLine('✗ Erreur de lecture: ' + error.message, 'error');
                 console.error('Read error:', error);
                 updateStatus(false);
             }
@@ -485,99 +925,57 @@
                     port = null;
                 }
                 
-                addTerminalLine('✓ Déconnecté', 'info');
+                addConsoleLine('✓ Déconnecté', 'info');
                 updateStatus(false);
             } catch (error) {
-                addTerminalLine('✗ Erreur lors de la déconnexion: ' + error.message, 'error');
+                addConsoleLine('✗ Erreur lors de la déconnexion: ' + error.message, 'error');
                 console.error('Disconnect error:', error);
             }
         }
 
-        // Send command
-        async function sendCommand(command) {
-            if (!isConnected || !writer) {
-                addTerminalLine('✗ Non connecté', 'error');
-                return;
+        // Editor event listeners
+        document.getElementById('codeEditor').addEventListener('input', onEditorChange);
+        document.getElementById('codeEditor').addEventListener('scroll', function() {
+            document.getElementById('lineNumbers').scrollTop = this.scrollTop;
+        });
+        document.getElementById('codeEditor').addEventListener('click', updateLineNumbers);
+        document.getElementById('codeEditor').addEventListener('keyup', updateLineNumbers);
+
+        // Console scroll listener - detect if user scrolls up
+        document.getElementById('consoleOutput').addEventListener('scroll', function() {
+            // Si l'utilisateur est en bas, réactiver l'auto-scroll
+            if (isScrolledToBottom()) {
+                autoScrollEnabled = true;
+            } else {
+                // Si l'utilisateur remonte, désactiver temporairement l'auto-scroll
+                autoScrollEnabled = false;
             }
+            updateScrollButton();
+        });
 
-            try {
-                addTerminalLine('tidal> ' + command, 'prompt');
-                await writer.write(command + '\n');
-                
-                // Add to history
-                if (command && command !== commandHistory[commandHistory.length - 1]) {
-                    commandHistory.push(command);
-                    if (commandHistory.length > 50) {
-                        commandHistory.shift();
-                    }
-                }
-                historyIndex = commandHistory.length;
-                
-            } catch (error) {
-                addTerminalLine('✗ Erreur d\'envoi: ' + error.message, 'error');
-                console.error('Send error:', error);
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            // Ctrl+Enter : Evaluate all code
+            if (event.ctrlKey && event.key === 'Enter') {
+                evaluateCode();
+                event.preventDefault();
             }
-        }
-
-        // Quick command
-        function quickCommand(cmd) {
-            document.getElementById('terminalInput').value = cmd;
-            document.getElementById('terminalInput').focus();
-        }
-
-        // Input handling
-        document.getElementById('terminalInput').addEventListener('keydown', function(event) {
-            if (event.key === 'Enter') {
-                const input = this.value.trim();
-                if (input) {
-                    sendCommand(input);
-                    this.value = '';
-                }
+            
+            // Shift+Enter : Evaluate current line
+            if (event.shiftKey && event.key === 'Enter') {
+                evaluateSelection();
                 event.preventDefault();
-            } else if (event.key === 'ArrowUp') {
-                // History up
-                if (historyIndex > 0) {
-                    historyIndex--;
-                    this.value = commandHistory[historyIndex] || '';
-                }
+            }
+            
+            // Ctrl+. : Stop all patterns
+            if (event.ctrlKey && event.key === '.') {
+                clearAllPatterns();
                 event.preventDefault();
-            } else if (event.key === 'ArrowDown') {
-                // History down
-                if (historyIndex < commandHistory.length - 1) {
-                    historyIndex++;
-                    this.value = commandHistory[historyIndex] || '';
-                } else {
-                    historyIndex = commandHistory.length;
-                    this.value = '';
-                }
-                event.preventDefault();
-            } else if (event.key === 'Tab') {
-                // Auto-complete (basic)
-                const commands = [
-                    // Percussions
-                    'bd', 'kick', 'sd', 'snare', 'sn', 'hh', 'hat', 'cp', 'clap', 
-                    'tom', 'rim', 'cymbal', 'crash', 'ride',
-                    // Instruments
-                    'sine:', 'saw:', 'square:', 'triangle:', 'bass:', 'lead:', 'pad:', 'pluck:',
-                    // Notes
-                    'c3', 'c4', 'c5', 'd3', 'd4', 'd5', 'e3', 'e4', 'e5',
-                    'f3', 'f4', 'f5', 'g3', 'g4', 'g5', 'a3', 'a4', 'a5', 'b3', 'b4', 'b5',
-                    // Commandes
-                    'bpm', 'clear', 'hush', 'help', 'silence'
-                ];
-                const input = this.value;
-                const lastWord = input.split(' ').pop();
-                
-                if (lastWord) {
-                    const matches = commands.filter(cmd => cmd.startsWith(lastWord));
-                    if (matches.length === 1) {
-                        const words = input.split(' ');
-                        words[words.length - 1] = matches[0];
-                        this.value = words.join(' ') + (matches[0].endsWith(':') ? '' : ' ');
-                    } else if (matches.length > 1) {
-                        addTerminalLine('Suggestions: ' + matches.slice(0, 5).join(', '), 'info');
-                    }
-                }
+            }
+            
+            // Ctrl+L : Clear console
+            if (event.ctrlKey && event.key === 'l') {
+                clearConsole();
                 event.preventDefault();
             }
         });
@@ -585,30 +983,30 @@
         // Check for Web Serial API support
         window.addEventListener('load', function() {
             if (!('serial' in navigator)) {
-                addTerminalLine('✗ Web Serial API non supportée dans ce navigateur', 'error');
-                addTerminalLine('Veuillez utiliser Chrome, Edge ou Opera', 'error');
-                addTerminalLine('Chrome: chrome://flags/#enable-experimental-web-platform-features', 'info');
+                addConsoleLine('✗ Web Serial API non supportée dans ce navigateur', 'error');
+                addConsoleLine('Veuillez utiliser Chrome, Edge ou Opera', 'error');
             } else {
-                addTerminalLine('✓ Web Serial API disponible', 'success');
-                addTerminalLine('Cliquez sur le bouton de connexion pour commencer', 'info');
+                addConsoleLine('✓ Web Serial API disponible', 'success');
+                addConsoleLine('Cliquez sur le bouton de connexion pour commencer', 'info');
+                addConsoleLine('', '');
+                addConsoleLine('Raccourcis clavier:', 'info');
+                addConsoleLine('  Ctrl+Enter : Évaluer tout le code', 'info');
+                addConsoleLine('  Shift+Enter : Évaluer la ligne courante', 'info');
+                addConsoleLine('  Ctrl+. : Arrêter tous les patterns', 'info');
+                addConsoleLine('  Ctrl+L : Effacer la console', 'info');
             }
+            
+            updateLineNumbers();
+            updateScrollButton();
         });
 
-        // Keyboard shortcuts
-        document.addEventListener('keydown', function(event) {
-            // Ctrl+L : Clear terminal
-            if (event.ctrlKey && event.key === 'l') {
-                clearTerminal();
-                event.preventDefault();
+        // Test function for scroll (accessible from browser console)
+        // Usage: testScroll()
+        function testScroll() {
+            for (let i = 0; i < 50; i++) {
+                addConsoleLine(`Test line ${i + 1} - Lorem ipsum dolor sit amet`, 'info');
             }
-            // Ctrl+D : Disconnect
-            if (event.ctrlKey && event.key === 'd') {
-                if (isConnected) {
-                    toggleConnection();
-                }
-                event.preventDefault();
-            }
-        });
+        }
     </script>
 </body>
 </html>

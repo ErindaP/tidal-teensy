@@ -4,11 +4,41 @@ Un système de live coding inspiré de **Tidal Cycles** fonctionnant sur Teensy 
 
 ## 🎵 Fonctionnalités
 
+- **Éditeur de code multi-lignes** avec parsing en temps réel
 - **Parser de patterns** inspiré de Tidal Cycles
 - **Scheduler précis** avec gestion du timing en microsecondes
-- **Synthèse audio temps réel** via AudioStream.h
-- **Interface série** pour le live coding
+- **Synthèse audio temps réel** via AudioStream.h (15+ instruments)
+- **Interface web moderne** avec Web Serial API
 - **Support de 8 canaux** simultanés (d1 à d8)
+- **16 voix de polyphonie** pour notes musicales
+
+## 🎹 Instruments Disponibles
+
+### Percussions (7)
+- **bd** (kick), **sd** (snare), **hh** (hihat), **cp** (clap)
+- **tom**, **rim**, **cymbal**
+
+### Instruments Mélodiques (8)
+- **sine**, **saw**, **square**, **triangle**
+- **bass**, **lead**, **pad**, **pluck**
+
+### Notes Musicales
+Format: `instrument:note` (ex: `sine:c4`, `bass:a2`)
+- Notes: c, d, e, f, g, a, b
+- Octaves: 0-8 (ex: c4, a3, e5)
+- Altérations: # (dièse), b (bémol)
+
+## 🖥️ Interface Web
+
+**Nouvelle interface éditeur de code** avec :
+- ✅ Éditeur multi-lignes avec numérotation
+- ✅ Parsing en temps réel de chaque ligne
+- ✅ Modification libre de n'importe quelle ligne
+- ✅ Console séparée pour les messages
+- ✅ Raccourcis clavier (Ctrl+Enter, Shift+Enter, Ctrl+.)
+- ✅ Indicateurs visuels d'état (modifié, erreur, envoyé)
+
+Voir **[EDITOR_INTERFACE.md](EDITOR_INTERFACE.md)** pour la documentation complète.
 
 ## 📋 Architecture
 
@@ -30,9 +60,11 @@ Gère le timing et l'ordonnancement:
 
 ### 3. **AudioEngine** (`AudioEngine.h/cpp`)
 Génération audio via AudioStream:
-- Synthèse simple de sons de batterie (kick, snare, hihat, clap)
-- Polyphonie (8 voix max)
-- Génération procédurale avec enveloppes
+- 15+ instruments synthétisés (percussions + mélodiques)
+- 16 voix de polyphonie
+- Génération procédurale avec enveloppes ADSR
+- Support des notes musicales (c0-b8)
+- Conversion note → fréquence automatique
 
 ### 4. **SerialInterface** (`SerialInterface.h/cpp`)
 Interface de communication:
@@ -40,26 +72,92 @@ Interface de communication:
 - Parsing des commandes en temps réel
 - Retours visuels
 
+### 5. **Interface Web** (`web_interface.html`)
+Éditeur de code multi-lignes:
+- Parsing en temps réel
+- Numérotation des lignes
+- Console séparée
+- Raccourcis clavier
+- Web Serial API pour communication USB
+
 ## 🚀 Utilisation
 
-### Commandes de base
+### Interface Web (Recommandé)
 
+1. **Démarrer le serveur local** :
+```bash
+python serve_interface.py
+```
+
+2. **Ouvrir dans Chrome/Edge/Opera** :
+```
+http://localhost:8000/web_interface.html
+```
+
+3. **Se connecter au Teensy** (bouton en haut)
+
+4. **Écrire du code** :
+```
+d1 bd sd hh cp
+d2 bd*4
+d3 sine:c4 sine:e4 sine:g4
+bpm 140
+```
+
+5. **Évaluer** :
+   - **Ctrl+Enter** : Tout le code
+   - **Shift+Enter** : Ligne courante seulement
+   - **Ctrl+.** : Stop tous les patterns
+
+Voir **[EDITOR_INTERFACE.md](EDITOR_INTERFACE.md)** pour plus de détails.
+
+### Commandes disponibles
+
+#### Patterns percussion
 ```
 d1 bd sd hh cp          # Pattern sur canal 1
 d2 bd*4                 # bd joué 4 fois par cycle
-d3 bd sd ~ hh           # avec silence
+d3 bd sd ~ hh           # avec silence (~)
+```
+
+#### Patterns mélodiques
+```
+d4 sine:c4 sine:e4 sine:g4      # Accord Do majeur
+d5 bass:c2*4                     # Ligne de basse répétée
+d6 lead:c4 ~ lead:e4 lead:g4    # Mélodie avec silences
+d7 pad:c3 pad:e3                 # Pad ambiant
+```
+
+#### Commandes système
+```
 d1 silence              # Coupe le canal 1
 bpm 140                 # Change le tempo
 clear / hush            # Efface tous les patterns
 help                    # Affiche l'aide
 ```
 
-### Samples disponibles
+### Percussions disponibles (7)
 
 - **bd** / **kick** - Kick drum
 - **sd** / **snare** / **sn** - Snare
 - **hh** / **hat** - Hi-hat
 - **cp** / **clap** - Clap
+- **tom** - Tom drum
+- **rim** - Rimshot
+- **cymbal** / **crash** / **ride** - Cymbales
+
+### Instruments mélodiques (8)
+
+- **sine** - Onde sinusoïdale pure
+- **saw** - Onde en dents de scie (brillant)
+- **square** - Onde carrée (8-bit)
+- **triangle** - Onde triangulaire (flûte)
+- **bass** - Basse synthétique avec harmoniques
+- **lead** - Synthé lead avec vibrato
+- **pad** - Son ambiant atmosphérique
+- **pluck** - Son pincé (guitare/harpe)
+
+Voir **[INSTRUMENTS.md](INSTRUMENTS.md)** pour exemples détaillés.
 
 ## 🔧 Installation
 
@@ -149,10 +247,3 @@ Si pas de son:
 - [Teensy Audio Library](https://www.pjrc.com/teensy/td_libs_Audio.html)
 - [AudioStream Documentation](https://www.pjrc.com/teensy/td_libs_AudioStream.html)
 
-## 📄 Licence
-
-Projet open-source éducatif - À adapter selon vos besoins
-
-## 👨‍💻 Auteur
-
-Créé comme base fonctionnelle pour un système de live coding embarqué
