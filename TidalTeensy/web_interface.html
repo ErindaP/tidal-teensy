@@ -303,10 +303,17 @@
         
         <!-- Quick Commands Bar -->
         <div class="quick-commands">
-            <span class="quick-commands-label">Quick:</span>
+            <span class="quick-commands-label">Drums:</span>
             <button class="quick-btn" onclick="quickCommand('d1 bd sd hh cp')">d1 bd sd hh cp</button>
             <button class="quick-btn" onclick="quickCommand('d2 bd*4')">d2 bd*4</button>
             <button class="quick-btn" onclick="quickCommand('d3 hh*8')">d3 hh*8</button>
+            
+            <span class="quick-commands-label">│ Notes:</span>
+            <button class="quick-btn" onclick="quickCommand('d4 sine:c4 sine:e4 sine:g4')">Sine Chord</button>
+            <button class="quick-btn" onclick="quickCommand('d4 bass:c2*4')">Bass Line</button>
+            <button class="quick-btn" onclick="quickCommand('d4 lead:c4 lead:e4 lead:g4 lead:c5')">Lead Melody</button>
+            
+            <span class="quick-commands-label">│ Control:</span>
             <button class="quick-btn" onclick="quickCommand('bpm 140')">bpm 140</button>
             <button class="quick-btn" onclick="quickCommand('clear')">clear</button>
             <button class="quick-btn" onclick="quickCommand('help')">help</button>
@@ -546,7 +553,18 @@
                 event.preventDefault();
             } else if (event.key === 'Tab') {
                 // Auto-complete (basic)
-                const commands = ['bd', 'sd', 'hh', 'cp', 'sn', 'kick', 'snare', 'hat', 'clap', 'bpm', 'clear', 'hush', 'help', 'silence'];
+                const commands = [
+                    // Percussions
+                    'bd', 'kick', 'sd', 'snare', 'sn', 'hh', 'hat', 'cp', 'clap', 
+                    'tom', 'rim', 'cymbal', 'crash', 'ride',
+                    // Instruments
+                    'sine:', 'saw:', 'square:', 'triangle:', 'bass:', 'lead:', 'pad:', 'pluck:',
+                    // Notes
+                    'c3', 'c4', 'c5', 'd3', 'd4', 'd5', 'e3', 'e4', 'e5',
+                    'f3', 'f4', 'f5', 'g3', 'g4', 'g5', 'a3', 'a4', 'a5', 'b3', 'b4', 'b5',
+                    // Commandes
+                    'bpm', 'clear', 'hush', 'help', 'silence'
+                ];
                 const input = this.value;
                 const lastWord = input.split(' ').pop();
                 
@@ -555,7 +573,9 @@
                     if (matches.length === 1) {
                         const words = input.split(' ');
                         words[words.length - 1] = matches[0];
-                        this.value = words.join(' ') + ' ';
+                        this.value = words.join(' ') + (matches[0].endsWith(':') ? '' : ' ');
+                    } else if (matches.length > 1) {
+                        addTerminalLine('Suggestions: ' + matches.slice(0, 5).join(', '), 'info');
                     }
                 }
                 event.preventDefault();

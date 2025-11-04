@@ -166,19 +166,46 @@ void PatternParser::tokensToEvents(PatternEvent* events, int* eventCount) {
 }
 
 bool PatternParser::isSampleName(const char* str) {
-  // Liste de samples reconnus
+  // Percussion samples
   const char* knownSamples[] = {
     "bd", "sd", "hh", "cp", "sn", "tom", "kick", "snare", "hat", "clap",
-    "perc", "rim", "ride", "crash", "cymbal"
+    "perc", "rim", "ride", "crash", "cymbal", "lt", "mt", "rs"
   };
   
-  for (int i = 0; i < 15; i++) {
+  // Vérifier les percussions
+  for (int i = 0; i < 18; i++) {
     if (strcmp(str, knownSamples[i]) == 0) {
       return true;
     }
   }
+  
+  // Vérifier si c'est une note musicale (format: instrument:note)
+  if (strchr(str, ':') != NULL) {
+    // Extraire l'instrument
+    char inst[16];
+    int colonPos = 0;
+    while (str[colonPos] != ':' && str[colonPos] != '\0' && colonPos < 15) {
+      inst[colonPos] = str[colonPos];
+      colonPos++;
+    }
+    inst[colonPos] = '\0';
+    
+    // Instruments mélodiques reconnus
+    const char* instruments[] = {
+      "sine", "sin", "saw", "sawtooth", "square", "pulse",
+      "triangle", "tri", "bass", "lead", "pad", "pluck", "harp"
+    };
+    
+    for (int i = 0; i < 13; i++) {
+      if (strcmp(inst, instruments[i]) == 0) {
+        return true;
+      }
+    }
+  }
+  
   return false;
-}
+    }
+
 
 int PatternParser::getSampleId(const char* name) {
   // Convertit un nom de sample en ID (pour la banque de sons)
