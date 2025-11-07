@@ -24,9 +24,12 @@
 
 // Objets Audio
 AudioEngine audioEngine;
-AudioOutputI2S i2s1;
-AudioConnection patchCord1(audioEngine, 0, i2s1, 0);
-AudioConnection patchCord2(audioEngine, 0, i2s1, 1);
+AudioOutputI2S i2s1;           // Sortie vers DAC Teensy
+AudioOutputUSB usb1;           // Sortie vers USB (ordinateur)
+AudioConnection patchCord1(audioEngine, 0, i2s1, 0);  // Left → I2S
+AudioConnection patchCord2(audioEngine, 0, i2s1, 1);  // Right → I2S
+AudioConnection patchCord3(audioEngine, 0, usb1, 0);  // Left → USB
+AudioConnection patchCord4(audioEngine, 0, usb1, 1);  // Right → USB
 AudioControlSGTL5000 audioShield;
 
 // Composants du système
@@ -38,14 +41,20 @@ void setup() {
   Serial.begin(115200);
   delay(1000);
   
-  Serial.println("=== TidalTeensy v0.1 ===");
+  Serial.println("=== TidalTeensy v1.1 - USB Audio Edition ===");
   Serial.println("Live Coding System pour Teensy 4.0");
   Serial.println();
   
   // Configuration Audio
-  AudioMemory(20);
+  AudioMemory(25);  // Augmenté pour supporter USB + I2S
   audioShield.enable();
   audioShield.volume(0.5);
+  
+  Serial.println("[Audio] Configuration:");
+  Serial.println("  - Sortie I2S (DAC Teensy)");
+  Serial.println("  - Sortie USB (vers ordinateur)");
+  Serial.println("  Configurez 'Teensy Audio' comme peripherique de sortie sur votre PC");
+  Serial.println();
   
   // Initialisation du scheduler
   scheduler.begin(120.0f); // 120 BPM par défaut

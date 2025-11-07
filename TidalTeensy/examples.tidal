@@ -171,6 +171,24 @@ d4 ~ ~ cymbal ~
 -- Flats:  db eb gb ab bb
 -- Octaves: c2 (low) → c4 (middle) → c6 (high)
 
--- ════════════════════════════════════════════════
--- Have fun live coding! 🎵🎹
--- ════════════════════════════════════════════════
+
+
+a3 c4 croche 
+e4 noire
+d4 c4 croche
+b3 noire
+
+---- 
+c4 d4 croche
+e4 noire
+c4 noire
+b3 noire b3 noire
+
+
+
+Tetrisssss 
+bpm 35
+d1 pluck:e4 ~ pluck:d4 ~ pluck:a3 ~ pluck:e4 ~ pluck:b3 ~ pluck:d4 pluck:e4 pluck:c4 pluck:a3 pluck:a3
+d2 ~ ~ pluck:b3 pluck:c4 ~ ~ pluck:c4 pluck:b3 ~ ~ pluck:a3 pluck:c4 ~ ~ pluck:d4 pluck:c4 ~ ~ pluck:b3 pluck:c4 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+d3 bass:b1 ~ bass:b1 ~ bass:b1 ~ bass:b1 ~ bass:b1 ~ bass:b1 ~ bass:b1 ~ bass:b1 ~ bass:b1 ~ bass:b1 ~ bass:b1 ~ bass:b1 ~ bass:b1 ~ bass:b1 ~ bass:b1 ~
+d4 ~ hh ~ hh ~ hh ~ hh ~ hh ~ hh ~ hh ~ hh ~ hh ~ hh ~ hh ~ hh ~ hh ~ hh ~ hh
