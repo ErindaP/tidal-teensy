@@ -388,6 +388,128 @@
             display: block;
         }
         
+        /* Visualizer Panel */
+        .visualizer-panel {
+            background: #0f1419;
+            border: 1px solid #00ff88;
+            border-radius: 5px;
+            margin: 15px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            display: none;
+        }
+        
+        .visualizer-panel.visible {
+            display: block;
+        }
+        
+        .visualizer-header {
+            background: #16213e;
+            padding: 10px 15px;
+            border-bottom: 1px solid #00ff88;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .visualizer-title {
+            color: #00ff88;
+            font-size: 1em;
+            font-weight: bold;
+        }
+        
+        .visualizer-content {
+            padding: 15px;
+            height: 320px;
+            overflow-y: auto;
+        }
+        
+        .channel-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            gap: 10px;
+        }
+        
+        .channel-label {
+            color: #00ff88;
+            font-weight: bold;
+            width: 30px;
+            text-align: right;
+            font-size: 0.9em;
+        }
+        
+        .channel-timeline {
+            flex: 1;
+            height: 30px;
+            background: #1a1f2e;
+            border: 1px solid #2a3f5f;
+            border-radius: 3px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .timeline-pattern {
+            color: #888;
+            font-size: 0.75em;
+            position: absolute;
+            left: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 90%;
+        }
+        
+        .event-box {
+            position: absolute;
+            top: 3px;
+            bottom: 3px;
+            background: linear-gradient(180deg, #00ff88, #007f44);
+            border-radius: 4px;
+            opacity: 0.95;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #04121a;
+            font-size: 0.7em;
+            text-align: center;
+            padding: 0 4px;
+            box-sizing: border-box;
+            transition: transform 0.08s ease, box-shadow 0.08s ease, opacity 0.12s ease;
+            white-space: nowrap;
+        }
+
+        .event-box[data-label]::after {
+            content: attr(data-label);
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+            pointer-events: none;
+        }
+
+        .event-box.active {
+            background: linear-gradient(180deg, #ffff66, #ffcc00);
+            box-shadow: 0 4px 12px rgba(255,204,0,0.6);
+            transform: translateY(-1px) scale(1.02);
+            color: #0a0e27;
+            z-index: 5;
+        }
+        
+        .playhead {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #ff4444;
+            box-shadow: 0 0 5px #ff4444;
+            z-index: 10;
+            transition: left 0.1s linear;
+        }
+        
         /* Quick Commands */
         .quick-commands {
             background: #16213e;
@@ -434,14 +556,14 @@
     <!-- Connection Modal -->
     <div id="connectionModal">
         <div class="modal-content">
-            <h2>� TidalTeensy Code Editor</h2>
+            <h2> TidalTeensy Code Editor</h2>
             <p>Interface de live coding multi-lignes pour Teensy 4.0</p>
             <p style="font-size: 0.9em; color: #ff8800;">
-                ⚠️ Nécessite Chrome, Edge ou Opera<br>
+                 Nécessite Chrome, Edge ou Opera<br>
                 (Web Serial API)
             </p>
             <div class="modal-buttons">
-                <button onclick="connectSerial()">🔌 Se connecter au Teensy</button>
+                <button onclick="connectSerial()"> Se connecter au Teensy</button>
             </div>
             <p style="margin-top: 20px; font-size: 0.85em; color: #666;">
                 Le navigateur va vous demander de sélectionner le port série USB
@@ -451,12 +573,13 @@
 
     <!-- Terminal Header -->
     <div class="terminal-header">
-        <div class="terminal-title">🎹 TidalTeensy Code Editor</div>
+        <div class="terminal-title">TidalTeensy Code Editor</div>
         <div class="terminal-status">
             <div class="status-indicator">
                 <div class="status-dot" id="statusDot"></div>
                 <span id="statusText">Déconnecté</span>
             </div>
+            <button class="btn-small" onclick="toggleVisualizer()" id="visualizerToggle"> Afficher Visualiseur</button>
             <button class="btn-small" onclick="toggleConnection()">Déconnecter</button>
         </div>
     </div>
@@ -466,7 +589,7 @@
         <!-- Code Editor Panel -->
         <div class="editor-panel">
             <div class="editor-header">
-                <div class="editor-title">📝 Code Editor</div>
+                <div class="editor-title"> Code Editor</div>
                 <div class="editor-actions">
                     <button class="btn-editor" onclick="evaluateCode()" title="Ctrl+Enter">▶ Evaluate All</button>
                     <button class="btn-editor" onclick="evaluateSelection()" title="Shift+Enter">▶ Eval Line</button>
@@ -496,7 +619,7 @@ clear
         <!-- Console Panel -->
         <div class="console-panel">
             <div class="console-header">
-                <div class="console-title">📟 Console</div>
+                <div class="console-title">Console</div>
                 <div class="editor-actions">
                     <button class="btn-editor" onclick="clearConsole()">Clear</button>
                 </div>
@@ -508,7 +631,7 @@ clear
             </div>
             
             <!-- Scroll to bottom button (appears when scrolled up) -->
-            <button id="scrollToBottomBtn" onclick="scrollToBottom()">↓ Nouveaux messages</button>
+            <button id="scrollToBottomBtn" onclick="scrollToBottom()"> Nouveaux messages</button>
             
             <!-- Quick Commands Bar -->
             <div class="quick-commands">
@@ -519,6 +642,16 @@ clear
                 <button class="quick-btn" onclick="insertCode('bpm 140')">bpm 140</button>
                 <button class="quick-btn" onclick="sendCommand('clear')">clear all</button>
             </div>
+        </div>
+    </div>
+    
+    <!-- Visualizer Panel (Hidden by default) -->
+    <div class="visualizer-panel" id="visualizerPanel">
+        <div class="visualizer-header">
+            <div class="visualizer-title">Visualiseur 8 Channels</div>
+        </div>
+        <div class="visualizer-content" id="visualizerContent">
+            <!-- Les 8 channels seront créées dynamiquement -->
         </div>
     </div>
 
@@ -588,6 +721,259 @@ clear
             scrollConsole();
             updateScrollButton();
         }
+        
+        // ============================================================
+        // VISUALIZER FUNCTIONS
+        // ============================================================
+        
+        let visualizerVisible = false;
+        let channelsData = {}; // Stocke les patterns pour chaque channel
+        let playheadPosition = 0; // Position du playhead (0-100%)
+        let animationFrameId = null;
+        let currentBPM = 120; // BPM par défaut
+        let lastFrameTime = 0; // Pour calculer deltaTime
+        
+        // Initialize visualizer
+        function initVisualizer() {
+            const content = document.getElementById('visualizerContent');
+            content.innerHTML = '';
+            
+            // Créer les 8 channels
+            for (let i = 1; i <= 8; i++) {
+                const channelRow = document.createElement('div');
+                channelRow.className = 'channel-row';
+                channelRow.innerHTML = `
+                    <div class="channel-label">d${i}</div>
+                    <div class="channel-timeline" id="timeline${i}">
+                        <div class="playhead" id="playhead${i}"></div>
+                        <div class="timeline-pattern" id="pattern${i}">~</div>
+                    </div>
+                `;
+                content.appendChild(channelRow);
+                
+                // Initialiser les données du channel
+                channelsData[`d${i}`] = {
+                    pattern: '~',
+                    events: [],
+                    lastUpdate: 0
+                };
+            }
+        }
+        
+        // Toggle visualizer
+        function toggleVisualizer() {
+            visualizerVisible = !visualizerVisible;
+            const panel = document.getElementById('visualizerPanel');
+            const btn = document.getElementById('visualizerToggle');
+            
+            if (visualizerVisible) {
+                panel.classList.add('visible');
+                btn.textContent = '📊 Masquer Visualiseur';
+                if (Object.keys(channelsData).length === 0) {
+                    initVisualizer();
+                }
+                updateBPMDisplay();
+                startVisualizerAnimation();
+            } else {
+                panel.classList.remove('visible');
+                btn.textContent = '📊 Afficher Visualiseur';
+                stopVisualizerAnimation();
+            }
+        }
+        
+        // Update channel pattern
+        function updateChannelPattern(channel, pattern) {
+            if (!channelsData[channel]) return;
+            
+            channelsData[channel].pattern = pattern;
+            channelsData[channel].lastUpdate = Date.now();
+            
+            // Parse le pattern pour créer les event markers
+            const events = parsePatternForVisualization(pattern);
+            channelsData[channel].events = events;
+            
+            // Mettre à jour l'affichage
+            renderChannel(channel);
+        }
+        
+        // Update BPM and refresh visualizer speed
+        function updateBPM(newBPM) {
+            if (newBPM && newBPM > 0 && newBPM <= 300) {
+                currentBPM = newBPM;
+                updateBPMDisplay();
+                addConsoleLine(`♪ BPM mis à jour: ${currentBPM}`, 'info');
+            }
+        }
+        
+        // Update BPM display in visualizer header
+        function updateBPMDisplay() {
+            const title = document.querySelector('.visualizer-title');
+            if (title) {
+                title.textContent = `🎼 Visualiseur 8 Channels | ${currentBPM} BPM`;
+            }
+        }
+        
+        // Parse pattern pour extraire les événements et durées
+        // Supporte les multiplicateurs sous la forme `token*4` qui répète le token
+        function parsePatternForVisualization(pattern) {
+            if (!pattern || pattern.trim() === '~') {
+                return [];
+            }
+
+            // Séparer les éléments du pattern
+            const tokens = pattern.trim().split(/\s+/);
+            const sequence = [];
+
+            // Expander les multiplicateurs (e.g., hh*4 -> hh,hh,hh,hh)
+            tokens.forEach(tok => {
+                if (!tok || tok === '~') return;
+                const m = tok.match(/^(.*)\*(\d+)$/);
+                if (m) {
+                    const label = m[1];
+                    const count = Math.max(1, parseInt(m[2], 10) || 1);
+                    for (let i = 0; i < count; i++) sequence.push(label);
+                } else {
+                    sequence.push(tok);
+                }
+            });
+
+            if (sequence.length === 0) return [];
+
+            const total = sequence.length;
+            const events = sequence.map((label, idx) => {
+                const start = (idx / total) * 100;
+                const width = (1 / total) * 100;
+                return {
+                    start: start,
+                    width: width,
+                    label: label,
+                    active: false,
+                };
+            });
+
+            return events;
+        }
+        
+        // Render un channel (dessine des boîtes pour chaque événement)
+        function renderChannel(channel) {
+            const channelNum = channel.replace('d', '');
+            const timeline = document.getElementById(`timeline${channelNum}`);
+            const patternDiv = document.getElementById(`pattern${channelNum}`);
+
+            if (!timeline || !patternDiv) return;
+
+            const data = channelsData[channel];
+
+            // Afficher le pattern texte
+            patternDiv.textContent = data.pattern || '~';
+
+            // Effacer les anciennes boxes (mais pas le playhead ni le pattern text)
+            const oldBoxes = timeline.querySelectorAll('.event-box');
+            oldBoxes.forEach(b => b.remove());
+
+            // Créer les nouveaux boxes (insérer avant le playhead pour le z-index)
+            const playhead = timeline.querySelector('.playhead');
+            data.events.forEach((event, idx) => {
+                const box = document.createElement('div');
+                box.className = 'event-box';
+                box.style.left = event.start + '%';
+                box.style.width = event.width + '%';
+                box.setAttribute('data-index', idx);
+                box.setAttribute('data-label', event.label);
+                box.title = event.label;
+                if (event.active) box.classList.add('active');
+                // Insérer avant le playhead pour garder le z-index correct
+                if (playhead) {
+                    timeline.insertBefore(box, playhead);
+                } else {
+                    timeline.appendChild(box);
+                }
+            });
+        }
+        
+        // Animation du playhead (synchronisé avec BPM)
+        function animatePlayhead(timestamp) {
+            if (!visualizerVisible) return;
+
+            // Initialiser le temps de la première frame
+            if (lastFrameTime === 0) {
+                lastFrameTime = timestamp;
+                animationFrameId = requestAnimationFrame(animatePlayhead);
+                return; // Skip first frame to establish baseline
+            }
+            
+            // Calculer le temps écoulé en millisecondes
+            const deltaTime = timestamp - lastFrameTime;
+            lastFrameTime = timestamp;
+
+            // Calculer l'incrément basé sur le BPM
+            // Un cycle = 1 mesure à 4 temps (4 beats)
+            // Durée d'une mesure en ms = (60000 / BPM) * 4
+            const measureDurationMs = (60000 / currentBPM) * 4;
+            
+            // Incrémenter la position en fonction du temps écoulé
+            const increment = (deltaTime / measureDurationMs) * 100;
+            playheadPosition += increment;
+            
+            // Boucler exactement à 100%
+            if (playheadPosition >= 100) {
+                playheadPosition = playheadPosition % 100; // Modulo pour éviter les décalages
+            }
+
+            // Mettre à jour tous les playheads et états actifs
+            for (let i = 1; i <= 8; i++) {
+                const playhead = document.getElementById(`playhead${i}`);
+                const channelKey = `d${i}`;
+                if (playhead) {
+                    playhead.style.left = playheadPosition + '%';
+                }
+
+                // Update active box per channel
+                const data = channelsData[channelKey];
+                if (!data || !data.events) continue;
+
+                data.events.forEach((ev, idx) => {
+                    const wasActive = ev.active;
+                    const inRange = (playheadPosition >= ev.start) && (playheadPosition < (ev.start + ev.width));
+                    ev.active = inRange;
+                    if (wasActive !== ev.active) {
+                        // Update DOM box
+                        const timeline = document.getElementById(`timeline${i}`);
+                        if (!timeline) return;
+                        const box = timeline.querySelector(`.event-box[data-index='${idx}']`);
+                        if (box) {
+                            if (ev.active) box.classList.add('active');
+                            else box.classList.remove('active');
+                        }
+                    }
+                });
+            }
+
+            animationFrameId = requestAnimationFrame(animatePlayhead);
+        }
+        
+        // Start animation
+        function startVisualizerAnimation() {
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+            playheadPosition = 0;
+            lastFrameTime = 0; // Reset timer
+            // Démarrer avec requestAnimationFrame pour avoir le timestamp
+            animationFrameId = requestAnimationFrame(animatePlayhead);
+        }
+        
+        // Stop animation
+        function stopVisualizerAnimation() {
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+        }
+        
+        // ============================================================
+        // END VISUALIZER FUNCTIONS
+        // ============================================================
 
         // Update connection status
         function updateStatus(connected) {
@@ -740,6 +1126,22 @@ clear
                     linesState[lineNum].modified = false;
                     linesState[lineNum].error = false;
                     sentCount++;
+                    
+                    // Update visualizer if it's a pattern command
+                    if (/^d[1-8]\s+/.test(line)) {
+                        const match = line.match(/^(d[1-8])\s+(.+)$/);
+                        if (match) {
+                            updateChannelPattern(match[1], match[2]);
+                        }
+                    }
+                    
+                    // Update BPM if it's a BPM command
+                    if (/^bpm\s+\d+/.test(line)) {
+                        const bpmMatch = line.match(/^bpm\s+(\d+)/);
+                        if (bpmMatch) {
+                            updateBPM(parseInt(bpmMatch[1], 10));
+                        }
+                    }
                 }
                 
                 // Small delay between commands
@@ -788,6 +1190,22 @@ clear
                 linesState[currentLineNum].modified = false;
                 linesState[currentLineNum].error = false;
                 updateLineNumbers();
+                
+                // Update visualizer if it's a pattern command
+                if (/^d[1-8]\s+/.test(line)) {
+                    const match = line.match(/^(d[1-8])\s+(.+)$/);
+                    if (match) {
+                        updateChannelPattern(match[1], match[2]);
+                    }
+                }
+                
+                // Update BPM if it's a BPM command
+                if (/^bpm\s+\d+/.test(line)) {
+                    const bpmMatch = line.match(/^bpm\s+(\d+)/);
+                    if (bpmMatch) {
+                        updateBPM(parseInt(bpmMatch[1], 10));
+                    }
+                }
             }
         }
 
@@ -800,6 +1218,11 @@ clear
             
             addConsoleLine('■ Arrêt de tous les patterns...', 'info');
             await sendCommand('clear');
+            
+            // Clear visualizer
+            for (let i = 1; i <= 8; i++) {
+                updateChannelPattern(`d${i}`, '~');
+            }
             addConsoleLine('✓ Tous les patterns arrêtés', 'success');
         }
 
